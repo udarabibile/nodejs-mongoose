@@ -1,10 +1,9 @@
-var Author = require('./author');
-var Book = require('./book');
+var Author = require('./Author');
+var Book = require('./Book');
 
 exports.create = async (author) => {
     const authorObj = await Author.create(author);
     const bookStatus = await Book.updateMany({ _id: { $in: authorObj.books } }, { $push: { 'authors': authorObj._id}});
-    console.log(`Updating Book objects status: ${bookStatus}`);
     return authorObj;
 }
 
@@ -12,10 +11,10 @@ exports.read = async (authorObjId) => {
     return await Author.findById(authorObjId).populate('books');
 }
 
-exports.update = async (author) => {
-    const authorObj = await Author.findByIdAndUpdate(author._id, author); // Returns original document.
+exports.update = async (authorObjId, updatedAuthor) => {
+    const authorObj = await Author.findByIdAndUpdate(authorObjId, updatedAuthor);
 
-    const updatedBookIds = author.books.map(b => b.toString());
+    const updatedBookIds = updatedAuthor.books.map(b => b.toString());
     const originalBookIds = authorObj.books.map(b => b.toString());
 
     const addedBookIds = updatedBookIds.filter(b => !originalBookIds.includes(b));
@@ -30,12 +29,12 @@ exports.update = async (author) => {
 }
 
 exports.delete = async (authorObjId) => {
-    const authorObj = await Author.findByIdAndDelete(authorObjId); // Returns original document.
+    const authorObj = await Author.findByIdAndDelete(authorObjId);
 
     const bookIds = authorObj.books.map(b => b.toString());
     Promise.all(
         bookIds.map(async id => await Book.findByIdAndUpdate(id, { $pull: { authors: authorObj._id }}))
     );
 
-    return authorObj
+    return authorObj;
 }
