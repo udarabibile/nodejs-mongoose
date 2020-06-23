@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-var Book = require('./book');
+var Book = require('./Book');
  
 var AuthorSchema = mongoose.Schema({
     name: { type: String, required: true},
@@ -8,24 +8,24 @@ var AuthorSchema = mongoose.Schema({
 
 AuthorSchema.post('save', async (doc, next) => {
     const author = doc;
-    console.log(`AuthorSchema middleware on post save for author: ${author._id}`);
-    console.log(`Updating books for ids: ${author.books}`);
+    // console.log(`AuthorSchema middleware on post save for author: ${author._id}`);
+    // console.log(`Updating books for ids: ${author.books}`);
 
     const books_status = await Book.updateMany({ _id: { $in: author.books } }, { $push: { 'authors': author._id}}); // , { 'new': true }
-    console.log(`Updating status: ${JSON.stringify(books_status)}`);
+    // console.log(`Updating status: ${JSON.stringify(books_status)}`);
 
     next();
 });
 
-AuthorSchema.pre('findOneAndUpdate', function(next) {
-    console.log('findOneAndUpdate pre hook');
-    console.log(this._update);
+// AuthorSchema.pre('findOneAndUpdate', function(next) {
+//     // console.log('findOneAndUpdate pre hook');
+//     // console.log(this._update);
 
-    next();
-});
+//     next();
+// });
 
 AuthorSchema.post('findOneAndUpdate', function(doc) {
-    console.log('findOneAndUpdate post hook');
+    // console.log('findOneAndUpdate post hook');
 
     const originalBookIds = doc.books;
     const updatedBookIds = this._update['$set'].books;
@@ -42,7 +42,7 @@ AuthorSchema.post('findOneAndUpdate', function(doc) {
 });
 
 AuthorSchema.post('findOneAndDelete', function(doc) {
-    console.log('findOneAndDelete post hook');
+    // console.log('findOneAndDelete post hook');
 
     const originalBookIds = doc.books;
     Promise.all(
@@ -51,22 +51,6 @@ AuthorSchema.post('findOneAndDelete', function(doc) {
 
     // next();
 });
-
-
-AuthorSchema.pre('updateOne', async (doc, next) => {
-    console.log('updateOne pre hook');
-    console.log(this);
-    next();
-});
-
-AuthorSchema.post('updateOne', async (doc, next) => {
-    console.log('updateOne post hook');
-    console.log(doc);
-    next();
-});
-
-
-
 
 var Author = mongoose.model('Author', AuthorSchema);
 
